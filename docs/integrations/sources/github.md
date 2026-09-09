@@ -61,7 +61,7 @@ Log into [GitHub](https://github.com) and then generate a [personal access token
 
 6. **GitHub Repositories** - Enter a list of GitHub organizations/repositories, e.g. `airbytehq/airbyte` for single repository, `airbytehq/airbyte airbytehq/another-repo` for multiple repositories. If you want to specify the organization to receive data from all its repositories, then you should specify it according to the following example: `airbytehq/*`. You can also match a subset of an organization's repositories by name pattern, for example `airbytehq/a*` for every repository whose name starts with `a`.
 
-   Wildcards work only for organizations. The connector expands `owner/*` by listing the owner's repositories through GitHub's organization API, which returns 404 for a personal account. If the owner is a personal account, the wildcard matches no repositories, and the connector logs a warning and skips it. To sync repositories owned by a personal account, list each one explicitly, for example `octocat/hello-world`. The organization-scoped streams (`organizations`, `teams`, `team_members`, `team_memberships`, and `users`) return data only for owners that GitHub confirms are organizations.
+   Wildcards work only for organizations. The connector expands any wildcard entry, whether `owner/*` or `owner/prefix*`, by listing the owner's repositories through GitHub's organization API, which returns 404 for a personal account. If the owner is a personal account, the wildcard matches no repositories, and the connector logs a warning and skips it. To sync repositories owned by a personal account, list each one explicitly, for example `octocat/hello-world`. The organization-scoped streams (`organizations`, `teams`, `team_members`, `team_memberships`, and `users`) return data only for owners that GitHub confirms are organizations.
 
    :::caution
    Repositories with the wrong name or repositories that do not exist or have the wrong name format will be skipped with `WARN` message in the logs.
@@ -229,7 +229,7 @@ Refer to GitHub article [Rate limits for the REST API](https://docs.github.com/e
 
 #### Secondary rate limits
 
-On top of the hourly quota, GitHub enforces [secondary rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#about-secondary-rate-limits) that cap how fast you may send requests, including 900 points per minute for REST API endpoints, where a read request costs one point. When the connector hits a secondary limit it waits and retries rather than switching tokens, because GitHub applies these limits to the account rather than to the individual token.
+On top of the hourly quota, GitHub enforces [secondary rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#about-secondary-rate-limits) that cap how fast you may send requests, including 900 points per minute for REST API endpoints, where a read request costs one point. When the connector hits a secondary limit, it waits for the retry period GitHub indicates in the response and then retries, rather than switching to another token.
 
 The connector throttles itself to 900 requests per minute to stay inside that limit, but only for streams that have moved to its declarative implementation (`repositories`, `assignees`, `branches`, `collaborators`, `issue_labels`, `tags`, `organizations`, `teams`, and `users`). Requests from the other streams aren't counted against that budget, so a large sync can still trip a secondary limit. Raising **Number of Concurrent Threads** makes this more likely.
 
